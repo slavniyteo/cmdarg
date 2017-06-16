@@ -131,8 +131,6 @@ function cmdarg_describe
     ${cmdarg_helpers['describe']} $longopt $opt $argtype "${default}" "${description}" "${flags}" "${validator}"
 }
 
-bold=$( echo -e "\033[1m")
-normal=$( echo -e "\033[0m")
 function cmdarg_describe_default
 {
     set -u
@@ -145,6 +143,9 @@ function cmdarg_describe_default
     local validator="${7:-}"
     set +u
 
+    bold=$( echo -e "\033[1m")
+    normal=$( echo -e "\033[0m")
+
     if [[ "${opt:0:2}" != '%%' ]]; 
         then optdesc="${bold}-${opt},${normal}"
         else optdesc="   "
@@ -156,16 +157,16 @@ function cmdarg_describe_default
     fi
     case ${argtype} in
 	$CMDARG_TYPE_STRING)
-	    echo "${optdesc} ${longoptdesc} v : String. ${description} ${default}"
+	    echo -e "\t${optdesc} ${longoptdesc} <value> : String. \n\t\t${description} ${default}\n"
 	    ;;
 	$CMDARG_TYPE_BOOLEAN)
-	    echo "${optdesc} ${longoptdesc} : Boolean. ${description} ${default}"
+	    echo -e "\t${optdesc} ${longoptdesc} : Boolean. \n\t\t${description} ${default}\n"
 	    ;;
 	$CMDARG_TYPE_ARRAY)
-	    echo "${optdesc} ${longoptdesc} v[, ...] : Array. ${description}. Pass this argument multiple times for multiple values. ${default}"
+	    echo -e "\t${optdesc} ${longoptdesc} <value> [, ...] : Array. \n\t\t${description}. \n\t\tPass this argument multiple times for multiple values. ${default}\n"
 	    ;;
 	$CMDARG_TYPE_HASH)
-	    echo "${optdesc} ${longoptdesc} k=v{, ..} : Hash. ${description}. Pass this argument multiple times for multiple key/value pairs. ${default}"
+	    echo -e "\t${optdesc} ${longoptdesc} <key=value> {, ..} : Hash. \n\t\t${description}. \n\t\tPass this argument multiple times for multiple key/value pairs. ${default}\n"
 	    ;;
 	*)
 	    echo "Unable to return string description for ${opt}:${longopt}; unknown type ${argtype}" >&2
@@ -189,7 +190,7 @@ function cmdarg_usage
 	echo "Required Arguments:"
 	for key in "${CMDARG_REQUIRED[@]}"
 	do
-	    echo "    $(cmdarg_describe $key)"
+      cmdarg_describe $key
 	done
 	echo
     fi
@@ -197,7 +198,7 @@ function cmdarg_usage
 	echo "Optional Arguments":
 	for key in "${CMDARG_OPTIONAL[@]}"
 	do
-	    echo "    $(cmdarg_describe $key)"
+      cmdarg_describe $key
 	done
     fi
     echo
