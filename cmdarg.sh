@@ -144,6 +144,7 @@ function cmdarg_describe_default
     set +u
 
     bold=$( echo -e "\033[1m")
+    underline=$( echo -e "\033[4m")
     normal=$( echo -e "\033[0m")
 
     if [[ "${opt:0:2}" != '%%' ]]; 
@@ -153,20 +154,26 @@ function cmdarg_describe_default
     longoptdesc="${bold}--${longopt}${normal}"
 
     if [ "${default}" != "" ]; then
-	default="(Default \"${default}\")"
+	default="\n${bold}${underline}Default${normal}: \"${default}\""
     fi
+    local first_line=''
+    local second_line=''
     case ${argtype} in
 	$CMDARG_TYPE_STRING)
-	    echo -e "\t${optdesc} ${longoptdesc} <value> : String. \n\t\t${description} ${default}\n"
+            first_line="${optdesc} ${longoptdesc} <value> : ${underline}String${normal}."
+            second_line="${description} ${default}"
 	    ;;
 	$CMDARG_TYPE_BOOLEAN)
-	    echo -e "\t${optdesc} ${longoptdesc} : Boolean. \n\t\t${description} ${default}\n"
+            first_line="${optdesc} ${longoptdesc} : ${underline}Boolean${normal}."
+            second_line="${description} ${default}"
 	    ;;
 	$CMDARG_TYPE_ARRAY)
-	    echo -e "\t${optdesc} ${longoptdesc} <value> [, ...] : Array. \n\t\t${description}. \n\t\tPass this argument multiple times for multiple values. ${default}\n"
+            first_line="${optdesc} ${longoptdesc} <value> [, ...] : ${underline}Array${normal}."
+            second_line="${description}.\nPass this argument multiple times for multiple values. ${default}"
 	    ;;
 	$CMDARG_TYPE_HASH)
-	    echo -e "\t${optdesc} ${longoptdesc} <key=value> {, ..} : Hash. \n\t\t${description}. \n\t\tPass this argument multiple times for multiple key/value pairs. ${default}\n"
+            first_line="${optdesc} ${longoptdesc} <key=value> {, ..} : ${underline}Hash${normal}."
+            second_line="${description}.\nPass this argument multiple times for multiple key/value pairs. ${default}"
 	    ;;
 	*)
 	    echo "Unable to return string description for ${opt}:${longopt}; unknown type ${argtype}" >&2
@@ -174,6 +181,10 @@ function cmdarg_describe_default
 	    ;;
     esac
 
+    local width=$(($(tput cols) - 16))
+    second_line=$( echo -e "$second_line" | fold -sw $width | sed 's/^\(.*\)$/                \1/g' )
+    local result="\t${first_line}\n${second_line}\n"
+    echo -e "$result"
 }
 
 function cmdarg_usage
