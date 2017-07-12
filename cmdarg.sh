@@ -15,6 +15,7 @@ CMDARG_TYPE_ARRAY=1
 CMDARG_TYPE_HASH=2
 CMDARG_TYPE_STRING=3
 CMDARG_TYPE_BOOLEAN=4
+CMDARG_TYPE_SET=5
 
 EMPTY_KEY_ALIAS='~'
 EMPTY_KEYS_PREFIX='%%'
@@ -103,6 +104,21 @@ function cmdarg
     CMDARG_GETOPTLIST="${CMDARG_GETOPTLIST}$1"
 }
 
+function cmdarg_set
+{
+    shortopt="${EMPTY_KEYS_PREFIX}$((EMPTY_KEYS++))"
+    longopt="$1"
+    values="$2"
+    description="$3"
+    CMDARG["$shortopt"]=$longopt
+    CMDARG_REV["$longopt"]=$shortopt
+    CMDARG_FLAGS["$shortopt"]=${CMDARG_FLAG_OPTARG}
+    CMDARG_TYPES["$longopt"]="${CMDARG_TYPE_SET}"
+    CMDARG_DESC["$shortopt"]="$description"
+
+    CMDARG_SETS["$shortopt"]="$values"
+}
+
 function cmdarg_info
 {
     # cmdarg_info <flag> <value>
@@ -163,6 +179,10 @@ function cmdarg_describe_default
             first_line="${optdesc} ${longoptdesc} <value> : ${underline}String${normal}."
             second_line="${description} ${default}"
 	    ;;
+	$CMDARG_TYPE_SET)
+            first_line="${optdesc} ${longoptdesc} : ${underline}Set${normal}."
+            second_line="${description} ${default}"
+	    ;;
 	$CMDARG_TYPE_BOOLEAN)
             first_line="${optdesc} ${longoptdesc} : ${underline}Boolean${normal}."
             second_line="${description} ${default}"
@@ -201,7 +221,7 @@ function cmdarg_usage
 	echo "Required Arguments:"
 	for key in "${CMDARG_REQUIRED[@]}"
 	do
-      cmdarg_describe $key
+            cmdarg_describe $key
 	done
 	echo
     fi
@@ -209,8 +229,14 @@ function cmdarg_usage
 	echo "Optional Arguments":
 	for key in "${CMDARG_OPTIONAL[@]}"
 	do
-      cmdarg_describe $key
+            cmdarg_describe $key
 	done
+    fi
+    if [[ "${#CMDARG_SETS[@]}" -ne 0 ]]; then
+        echo "Premade sets:"
+        for key in "${!CMDARG_SETS[@]}"; do
+            cmdarg_describe $key
+        done
     fi
     echo
     echo "${CMDARG_INFO['footer']}"
@@ -362,7 +388,9 @@ function cmdarg_parse
 	    fi
 	fi
 
-	if [ ${CMDARG["${opt}"]+abc} ]; then
+        if [ ${CMDARG_SETS["${opt}"]+abc} ]; then
+          cmdarg_parse ${CMDARG_SETS[${opt}]}
+	elif [ ${CMDARG["${opt}"]+abc} ]; then
 	    cmdarg_set_opt "${CMDARG[$opt]}" "$optarg"
 	    local rc=$?
 	    failed=$((failed + $rc))
@@ -466,6 +494,8 @@ declare -xA CMDARG_REV
 declare -xa CMDARG_OPTIONAL
 # A list of required arguments (e.g., :)
 declare -xa CMDARG_REQUIRED
+# Maps (set name) -> (values)
+declare -xA CMDARG_SETS
 # Maps (short arg) -> (description)
 declare -xA CMDARG_DESC
 # Maps (short arg) -> default

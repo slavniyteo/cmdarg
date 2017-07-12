@@ -40,6 +40,7 @@ Cmdarg lets you specify arguments (things you require), options (things you don'
     cmdarg 'r:' 'required-thing' 'Some thing I require'
     cmdarg 'o?' 'optional-thing' 'Some optional thing'
     cmdarg 'b' 'boolean-thing' 'Some boolean thing'
+    cmdarg_set 'simple_set' '-r premade-required-thing -b' 'Some premade parameters set'
     cmdarg_parse "$@"
 
     echo ${cmdarg_cfg['required-thing']}
@@ -48,6 +49,7 @@ Cmdarg lets you specify arguments (things you require), options (things you don'
 
     # your_script.sh -r some_thingy -b -o optional_thing
     # your_script.sh --required-thing some_thingy --boolean-thing
+    # your_script.sh --simple_set
 
 Because cmdarg does key off of the short options, you are limited to as many options as you have unique single characters in your character set (likely 61 - 26 lower & upper alpha, +9 numerics).
 
@@ -81,6 +83,16 @@ If O and T are both unset, and only the single letter N is provided, then the ar
 
 *VALIDATOR* The name of a bash function which will validate this argument (see VALIDATORS below).
 
+Sets
+====
+
+This function is used to create 'premade sets' of argumets to realise most resent cases.
+
+    cmdarg_set LONGOPT VALUES DESCRIPTION
+
+*LONGOPT* and *DESCRIPTION* are same as in cmdarg paragraph.
+
+*VALUES* is a string looks like arguments passed to your script.
 
 Validators
 ==========
