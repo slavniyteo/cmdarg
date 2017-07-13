@@ -11,11 +11,11 @@ CMDARG_FLAG_NOARG=0
 CMDARG_FLAG_REQARG=2
 CMDARG_FLAG_OPTARG=4
 
-CMDARG_TYPE_ARRAY=1
-CMDARG_TYPE_HASH=2
-CMDARG_TYPE_STRING=3
-CMDARG_TYPE_BOOLEAN=4
-CMDARG_TYPE_SET=5
+CMDARG_TYPE_ARRAY='ARRAY'
+CMDARG_TYPE_HASH='HASH'
+CMDARG_TYPE_STRING='STRING'
+CMDARG_TYPE_BOOLEAN='BOOLEAN'
+CMDARG_TYPE_SET='SET'
 
 EMPTY_KEY_ALIAS='~'
 EMPTY_KEYS_PREFIX='%%'
@@ -159,9 +159,9 @@ function cmdarg_describe_default
     local validator="${7:-}"
     set +u
 
-    bold=$( echo -e "\033[1m")
-    underline=$( echo -e "\033[4m")
-    normal=$( echo -e "\033[0m")
+    local bold=$( echo -e "\033[1m")
+    local underline=$( echo -e "\033[4m")
+    local normal=$( echo -e "\033[0m")
 
     if [[ "${opt:0:2}" != '%%' ]]; 
         then optdesc="${bold}-${opt},${normal}"
@@ -451,7 +451,7 @@ function cmdarg_dump
 
     for key in ${!cmdarg_cfg[@]}
     do
-	repr="${key}:${CMDARG_TYPES[$key]}"
+	repr="${key} : ${CMDARG_TYPES[$key]}"
 	if [[ ${CMDARG_TYPES[$key]} == $CMDARG_TYPE_ARRAY ]] || [[ ${CMDARG_TYPES[$key]} == $CMDARG_TYPE_HASH ]] ; then
 	    arrname="${key}"
 	    echo "${repr} => "
@@ -465,6 +465,11 @@ function cmdarg_dump
 	else
 	    echo "${repr} => ${cmdarg_cfg[$key]}"
 	fi
+    done
+
+    echo
+    for i in ${!cmdarg_argv[@]}; do
+      echo "Arg $i: ${cmdarg_argv[$i]}"
     done
 }
 
