@@ -112,7 +112,7 @@ function cmdarg_set
     description="$3"
     CMDARG["$shortopt"]=$longopt
     CMDARG_REV["$longopt"]=$shortopt
-    CMDARG_FLAGS["$shortopt"]=${CMDARG_FLAG_OPTARG}
+    CMDARG_FLAGS["$shortopt"]=${CMDARG_FLAG_NOARG}
     CMDARG_TYPES["$longopt"]="${CMDARG_TYPE_SET}"
     CMDARG_DESC["$shortopt"]="$description"
 
@@ -389,7 +389,7 @@ function cmdarg_parse
 	fi
 
         if [ ${CMDARG_SETS["${opt}"]+abc} ]; then
-          cmdarg_parse ${CMDARG_SETS[${opt}]}
+            cmdarg_parse ${CMDARG_SETS[${opt}]}
 	elif [ ${CMDARG["${opt}"]+abc} ]; then
 	    cmdarg_set_opt "${CMDARG[$opt]}" "$optarg"
 	    local rc=$?
