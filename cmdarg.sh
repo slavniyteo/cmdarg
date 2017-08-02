@@ -441,29 +441,29 @@ function cmdarg_traceback
 
 function cmdarg_dump
 {
-    local key
-    local repr
-    local arrname
-    local keys
-    local idx
-    local ref
-    local value
+    local _key
+    local _repr
+    local _arrname
+    local _keys
+    local _idx
+    local _ref
+    local _value
 
-    for key in ${!cmdarg_cfg[@]}
+    for _key in ${!cmdarg_cfg[@]}
     do
-	repr="${key} : ${CMDARG_TYPES[$key]}"
-	if [[ ${CMDARG_TYPES[$key]} == $CMDARG_TYPE_ARRAY ]] || [[ ${CMDARG_TYPES[$key]} == $CMDARG_TYPE_HASH ]] ; then
-	    arrname="${key}"
-	    echo "${repr} => "
-	    keys='${!'"$arrname"'[@]}'
-	    for idx in $(eval "echo $keys")
+	_repr="${_key} : ${CMDARG_TYPES[$_key]}"
+	if [[ ${CMDARG_TYPES[$_key]} == $CMDARG_TYPE_ARRAY ]] || [[ ${CMDARG_TYPES[$_key]} == $CMDARG_TYPE_HASH ]] ; then
+	    _arrname="${_key}"
+	    echo "${_repr} => "
+	    _keys='${!'"$_arrname"'[@]}'
+	    for _idx in $(eval "echo $_keys")
 	    do
-		ref='${'"$arrname"'[$idx]}'
-		value=$(eval "echo $ref")
-		echo "        ${idx} => $value"
+		_ref='${'"$_arrname"'[$_idx]}'
+		_value=$(eval "echo $_ref")
+		echo "        ${_idx} => $_value"
 	    done
 	else
-	    echo "${repr} => ${cmdarg_cfg[$key]}"
+	    echo "${_repr} => ${cmdarg_cfg[$_key]}"
 	fi
     done
 
