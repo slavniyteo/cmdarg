@@ -119,6 +119,12 @@ function cmdarg_set
     CMDARG_SETS["$shortopt"]="$values"
 }
 
+function cmdarg_argvs
+{
+    CMDARG_ARGV=( $@ )
+    CMDARG_LENGTH=${#CMDARG_ARGV[@]}
+}
+
 function cmdarg_info
 {
     # cmdarg_info <flag> <value>
@@ -212,10 +218,24 @@ function cmdarg_usage
     # cmdarg_usage
     #
     # Prints a very helpful usage message about the current program.
-    echo "$(basename $0) ${CMDARG_INFO['copyright']} : ${CMDARG_INFO['author']}"
-    echo
-    echo "${CMDARG_INFO['header']}"
-    echo
+    name=$(basename $0)
+    if [[ -n ${CMDARG_INFO['author']} ]]; then
+        echo "$name ${CMDARG_INFO['copyright']} : ${CMDARG_INFO['author']}"
+        echo
+    fi
+    if [[ -n ${CMDARG_INFO['header']} ]]; then
+        echo "${CMDARG_INFO['header']}"
+        echo
+    fi
+    if [[ ${CMDARG_LENGTH} != "" ]]; then
+        local argv=""
+        for arg in "${CMDARG_ARGV[@]}"; do
+          argv="${argv}${arg} "
+        done
+    fi
+    echo -e "Usage: \n        $name [options] $argv"
+    echo 
+
     local key
     if [[ "${#CMDARG_REQUIRED[@]}" -ne 0 ]]; then
         echo "Required Arguments:"
@@ -223,7 +243,6 @@ function cmdarg_usage
         do
             cmdarg_describe $key
         done
-        echo
     fi
     if [[ "${#CMDARG_OPTIONAL[@]}" -ne 0 ]]; then
         echo "Optional Arguments":
@@ -331,16 +350,18 @@ function cmdarg_check_empty
     esac
 }
 
+declare failed=0
+declare missing=""
 function cmdarg_parse
 {
     # cmdarg_parse "$@"
     #
     # Call it EXACTLY LIKE THAT, and it will parse your arguments for you.
     # This function only knows about the arguments that you previously called 'cmdarg' for.
-    local failed=0
-    local missing=""
-
-    local parsing=0
+    if [[ "$1" == "cmdarg_recursive" ]]; then
+        local recursive=true
+        shift
+    fi
     while [[ $# -ne 0 ]]; do
         local optarg=""
         local opt=""
@@ -356,7 +377,7 @@ function cmdarg_parse
             is_equals_arg=0
         fi
 
-        if [[ "$fullopt" == "--" ]] && [[ $parsing -eq 0 ]]; then
+        if [[ "$fullopt" == "--" ]]; then
             cmdarg_argv+=($@)
             break
         elif [[ "${fullopt:0:2}" == "--" ]]; then
@@ -389,7 +410,7 @@ function cmdarg_parse
         fi
 
         if [ ${CMDARG_SETS["${opt}"]+abc} ]; then
-            cmdarg_parse ${CMDARG_SETS[${opt}]}
+            cmdarg_parse "cmdarg_recursive" ${CMDARG_SETS[${opt}]}
         elif [ ${CMDARG["${opt}"]+abc} ]; then
             cmdarg_set_opt "${CMDARG[$opt]}" "$optarg"
             local rc=$?
@@ -400,6 +421,8 @@ function cmdarg_parse
             ${CMDARG_ERROR_BEHAVIOR} 1
         fi
     done
+
+    if [[ -n $recursive ]]; then return 0; fi
 
     # --- Don't ${CMDARG_ERROR_BEHAVIOR} early during validation, tell the user
     # everything they did wrong first
@@ -414,9 +437,17 @@ function cmdarg_parse
         fi
     done
 
+    if [[ -z ${recursive} ]] && [[ ${#cmdarg_argv[@]} -ne $CMDARG_LENGTH ]]; then
+        error_length=${#cmdarg_argv[@]}
+        failed=$((failed + 1))
+    fi
+
     if [ $failed -gt 0 ]; then
         if [[ "$missing" != "" ]]; then
             echo "Missing arguments : ${missing}" >&2
+        fi
+        if [[ "$error_length" != "" ]]; then
+            echo "You must specify ${CMDARG_LENGTH} arguments but specified '${cmdarg_argv[@]}'" >&2
         fi
         echo >&2
         ${cmdarg_helpers['usage']} >&2
@@ -501,6 +532,10 @@ declare -xa CMDARG_OPTIONAL
 declare -xa CMDARG_REQUIRED
 # Maps (set name) -> (values)
 declare -xA CMDARG_SETS
+# Nesessary cmdarg_argv array
+declare -xa CMDARG_ARGV
+# Length of nesessary cmdarg_argv array
+declare -x CMDARG_LENGTH
 # Maps (short arg) -> (description)
 declare -xA CMDARG_DESC
 # Maps (short arg) -> default
